@@ -34,37 +34,38 @@ export const app = new Frog({
 
 app.frame("/", (c) => {
   return c.res({
-    image: (
-      <div
-        style={{
-          alignItems: "center",
-          background: "linear-gradient(to right, #432889, #17101F)",
-          backgroundSize: "100% 100%",
-          display: "flex",
-          flexDirection: "column",
-          flexWrap: "nowrap",
-          height: "100%",
-          justifyContent: "center",
-          textAlign: "center",
-          width: "100%",
-        }}
-      >
-        <div
-          style={{
-            color: "white",
-            fontSize: 60,
-            fontStyle: "normal",
-            letterSpacing: "-0.025em",
-            lineHeight: 1.4,
-            marginTop: 30,
-            padding: "0 120px",
-            whiteSpace: "pre-wrap",
-          }}
-        >
-          Welcome to Unlock Protocol Calendar
-        </div>
-      </div>
-    ),
+    // image: (
+    //   <div
+    //     style={{
+    //       alignItems: "center",
+    //       background: "linear-gradient(to right, #432889, #17101F)",
+    //       backgroundSize: "100% 100%",
+    //       display: "flex",
+    //       flexDirection: "column",
+    //       flexWrap: "nowrap",
+    //       height: "100%",
+    //       justifyContent: "center",
+    //       textAlign: "center",
+    //       width: "100%",
+    //     }}
+    //   >
+    //     <div
+    //       style={{
+    //         color: "white",
+    //         fontSize: 60,
+    //         fontStyle: "normal",
+    //         letterSpacing: "-0.025em",
+    //         lineHeight: 1.4,
+    //         marginTop: 30,
+    //         padding: "0 120px",
+    //         whiteSpace: "pre-wrap",
+    //       }}
+    //     >
+    //       Welcome to Unlock Protocol Calendar
+    //     </div>
+    //   </div>
+    // ),
+    image: <StartImage />,
     intents: [
       // <Button action="/mint">Mint Today</Button>,
       <Button action="/calendar">Start</Button>,
@@ -283,6 +284,100 @@ app.transaction("/tx/:day/:address", async (c) => {
     value: 0n,
   });
 });
+
+function StartImage() {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#1a365d",
+        color: "white",
+        fontFamily: "sans-serif",
+        padding: "40px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "24px",
+          maxWidth: "800px",
+          textAlign: "center",
+        }}
+      >
+        <h1
+          style={{
+            fontSize: "48px",
+            fontWeight: "bold",
+            background: "linear-gradient(to right, #60a5fa, #a78bfa)",
+            backgroundClip: "text",
+            color: "transparent",
+            marginBottom: "16px",
+          }}
+        >
+          Welcome to Unlock Protocol
+        </h1>
+        <h2
+          style={{
+            fontSize: "64px",
+            fontWeight: "bold",
+            color: "white",
+            marginTop: "0",
+          }}
+        >
+          Advent Calendar
+        </h2>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            width: "100px",
+            height: "4px",
+            background: "linear-gradient(to right, #60a5fa, #a78bfa)",
+            borderRadius: "2px",
+            margin: "24px 0",
+          }}
+        ></div>
+      </div>
+
+      {/* Decorative Elements */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          position: "absolute",
+          top: "40px",
+          left: "40px",
+          width: "24px",
+          height: "24px",
+          borderRadius: "50%",
+          background: "#60a5fa",
+          opacity: "0.5",
+        }}
+      ></div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          position: "absolute",
+          bottom: "40px",
+          right: "40px",
+          width: "24px",
+          height: "24px",
+          borderRadius: "50%",
+          background: "#a78bfa",
+          opacity: "0.5",
+        }}
+      ></div>
+    </div>
+  );
+}
 
 function AdventCalendarImage({
   currentDay,
