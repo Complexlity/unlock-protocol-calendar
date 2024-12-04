@@ -10,7 +10,7 @@ import {
   getValidKeysForUser,
 } from "./utils.js";
 import { DAYS_CONTRACT_ADDRESSES } from "./constants.js";
-import uniFarcasterSdk from "../node_modules/uni-farcaster-sdk/dist/index.mjs";
+import uniFarcasterSdk from "uni-farcaster-sdk";
 import { Address } from "viem";
 import { unlockAbi } from "./abi.js";
 import { base } from "viem/chains";
@@ -81,15 +81,15 @@ app.frame("/calendar", async (c) => {
     });
   }
   const userFid = frameData.fid;
-  const res = await sdkInstance.getUsersByFid([userFid]);
-  if (res.error) {
-    return c.error({
-      message: "Something went wrong getting your user data",
-    });
-  }
+  // const res = await sdkInstance.getUsersByFid([userFid]);
+  // if (res.error) {
+  //   return c.error({
+  //     message: "Something went wrong getting your user data",
+  //   });
+  // }
   // const userAddress = res.data[0].ethAddresses[0] as Address;
-  // const userAddress = "0x8ff47879d9eE072b593604b8b3009577Ff7d6809" as Address;
-  const userAddress = "0xe06Dacf8a98CBbd9692A17fcb8e917a6cb5e65ED" as Address;
+  const userAddress = "0x8ff47879d9eE072b593604b8b3009577Ff7d6809" as Address;
+  // const userAddress = "0xe06Dacf8a98CBbd9692A17fcb8e917a6cb5e65ED" as Address;
   const today = getCurrentDateUTC();
   const validKeys = await getValidKeysForUser(userAddress, today);
   console.log({ validKeys });
@@ -109,9 +109,10 @@ app.frame("/calendar", async (c) => {
 
   // const imageUrl = getDayImage(nextMintableDay == -1 ? 1 : nextMintableDay + 1);
   // const action = nextMintableDay == -1 ? `/finish/${today}` : `/calendar`;
-
+  const action =
+    nextMintableDay == -1 ? "/" : `/finish/${nextMintableDay}/${remainingDays}`;
   return c.res({
-    action: `/finish/${nextMintableDay}/${remainingDays}`,
+    action,
     image: (
       <AdventCalendarImage
         currentDay={today}
@@ -151,9 +152,13 @@ app.frame("/calendar", async (c) => {
     //   </div>
     // ),
     intents: [
-      <Button.Transaction target={`/tx/${nextMintableDay}/${userAddress}`}>
-        Mint Day {`${Number(nextMintableDay) + 1}`}
-      </Button.Transaction>,
+      nextMintableDay === -1 ? (
+        <Button.Reset>Home</Button.Reset>
+      ) : (
+        <Button.Transaction target={`/tx/${nextMintableDay}/${userAddress}`}>
+          Mint Day {`${Number(nextMintableDay) + 1}`}
+        </Button.Transaction>
+      ),
     ],
   });
 });
@@ -388,18 +393,17 @@ function AdventCalendarImage({
 }) {
   const boxSize = 100;
   const gap = 24;
-
   function getBoxColor(day: number) {
-    if (nextMintableDay === -1 && day <= currentDay) {
+    if (nextMintableDay == -1 && day <= currentDay) {
       return "#48bb78"; // Success (green) for all days up to currentDay
     } else if (day < nextMintableDay + 1) {
       return "#48bb78"; // Success (green)
     } else if (day >= nextMintableDay + 1 && day <= currentDay) {
       return "#ed8936"; // Current day range (orange)
     } else if (day > currentDay) {
-      return "#4299e1"; // Future day (blue)
-    } else {
       return "#718096"; // Default (gray)
+    } else {
+      return "#4299e1"; // Future day (blue)
     }
   }
 
@@ -436,48 +440,49 @@ function AdventCalendarImage({
     fontFamily: "sans-serif",
   };
 
-  const row1 = Array.from({ length: 6 }, (_, i) => i + 1);
-  const row2 = Array.from({ length: 6 }, (_, i) => i + 7);
-  const row3 = Array.from({ length: 6 }, (_, i) => i + 13);
-  const row4 = Array.from({ length: 6 }, (_, i) => i + 19);
+  const messageStyle = {
+    fontSize: 32,
+    fontWeight: "bold",
+    marginTop: 32,
+    textAlign: "center",
+    display: "flex",
+    gap: "2px",
+  };
+
+  let rows: number[][] = [];
+  if (nextMintableDay == -1) {
+    const row1 = Array.from({ length: 8 }, (_, i) => i + 1);
+    const row2 = Array.from({ length: 8 }, (_, i) => i + 9);
+    const row3 = Array.from({ length: 8 }, (_, i) => i + 17);
+    rows = [row1, row2, row3];
+  } else {
+    const row1 = Array.from({ length: 6 }, (_, i) => i + 1);
+    const row2 = Array.from({ length: 6 }, (_, i) => i + 7);
+    const row3 = Array.from({ length: 6 }, (_, i) => i + 13);
+    const row4 = Array.from({ length: 6 }, (_, i) => i + 19);
+    rows = [row1, row2, row3, row4];
+  }
 
   return (
     <div style={containerStyle}>
       <h1 style={{ fontSize: 48, marginBottom: 20 }}>
         Your Advent Calendar 2024
       </h1>
-
-      <div style={rowStyle}>
-        {row1.map((day) => (
-          <div key={day} style={boxStyle(day)}>
-            {day}
-          </div>
-        ))}
-      </div>
-
-      <div style={rowStyle}>
-        {row2.map((day) => (
-          <div key={day} style={boxStyle(day)}>
-            {day}
-          </div>
-        ))}
-      </div>
-
-      <div style={rowStyle}>
-        {row3.map((day) => (
-          <div key={day} style={boxStyle(day)}>
-            {day}
-          </div>
-        ))}
-      </div>
-
-      <div style={rowStyle}>
-        {row4.map((day) => (
-          <div key={day} style={boxStyle(day)}>
-            {day}
-          </div>
-        ))}
-      </div>
+      {rows.map((row, i) => (
+        <div key={i} style={rowStyle}>
+          {row.map((day) => (
+            <div key={day} style={boxStyle(day)}>
+              {day}
+            </div>
+          ))}
+        </div>
+      ))}
+      {nextMintableDay === -1 && (
+        <div style={messageStyle}>
+          🎉 <span tw="text-green-600 mx-2">Congratulations!</span>
+          You have minted all days. Come back tomorrow! 🎉
+        </div>
+      )}
     </div>
   );
 }
