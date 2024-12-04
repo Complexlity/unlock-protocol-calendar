@@ -1,7 +1,7 @@
 import { Address, createPublicClient, http } from "viem";
 import { base } from "viem/chains";
 import { hookAbi, PublicLockAbi, unlockAbi } from "./abi.js";
-import { DAYS_CONTRACT_ADDRESSES } from "./constants.js";
+import { DAYS_CONTRACT_ADDRESSES, MAIN_SITE_URL } from "./constants.js";
 
 export function getCurrentDateUTC() {
   return new Date().getUTCDate();
@@ -74,3 +74,8 @@ export const getLockAddresses = async (hookContractAddress: Address) => {
 
   return lockAddresses;
 };
+
+export function getDayImage(day: number) {
+  return `${MAIN_SITE_URL}/images/nft/${day}.png`
+
+}

@@ -5,6 +5,7 @@ import { handle } from "frog/next";
 import { serveStatic } from "frog/serve-static";
 import {
   getCurrentDateUTC,
+  getDayImage,
   getUserNftBalance,
   getValidKeysForUser,
 } from "./utils.js";
@@ -86,8 +87,8 @@ app.frame("/calendar", async (c) => {
   //   });
   // }
   // const userAddress = res.data[0].ethAddresses[0];
-  // const userAddress = "0x8ff47879d9eE072b593604b8b3009577Ff7d6809" as Address;
-  const userAddress = "0xe06Dacf8a98CBbd9692A17fcb8e917a6cb5e65ED" as Address;
+  const userAddress = "0x8ff47879d9eE072b593604b8b3009577Ff7d6809" as Address;
+  // const userAddress = "0xe06Dacf8a98CBbd9692A17fcb8e917a6cb5e65ED" as Address;
   const today = getCurrentDateUTC();
   const validKeys = await getValidKeysForUser(userAddress, today);
   console.log({ validKeys });
@@ -100,39 +101,41 @@ app.frame("/calendar", async (c) => {
     }
   }
 
+  const imageUrl = getDayImage(nextMintableDay == -1 ? 1 : nextMintableDay + 1);
   return c.res({
     action: `/finish/${nextMintableDay}`,
-    image: (
-      <div
-        style={{
-          alignItems: "center",
-          background: "linear-gradient(to right, #432889, #17101F)",
-          backgroundSize: "100% 100%",
-          display: "flex",
-          flexDirection: "column",
-          flexWrap: "nowrap",
-          height: "100%",
-          justifyContent: "center",
-          textAlign: "center",
-          width: "100%",
-        }}
-      >
-        <div
-          style={{
-            color: "white",
-            fontSize: 60,
-            fontStyle: "normal",
-            letterSpacing: "-0.025em",
-            lineHeight: 1.4,
-            marginTop: 30,
-            padding: "0 120px",
-            whiteSpace: "pre-wrap",
-          }}
-        >
-          Here are the mint dates
-        </div>
-      </div>
-    ),
+    image: imageUrl,
+    // image: (
+    //   <div
+    //     style={{
+    //       alignItems: "center",
+    //       background: "linear-gradient(to right, #432889, #17101F)",
+    //       backgroundSize: "100% 100%",
+    //       display: "flex",
+    //       flexDirection: "column",
+    //       flexWrap: "nowrap",
+    //       height: "100%",
+    //       justifyContent: "center",
+    //       textAlign: "center",
+    //       width: "100%",
+    //     }}
+    //   >
+    //     <div
+    //       style={{
+    //         color: "white",
+    //         fontSize: 60,
+    //         fontStyle: "normal",
+    //         letterSpacing: "-0.025em",
+    //         lineHeight: 1.4,
+    //         marginTop: 30,
+    //         padding: "0 120px",
+    //         whiteSpace: "pre-wrap",
+    //       }}
+    //     >
+    //       Here are the mint dates
+    //     </div>
+    //   </div>
+    // ),
     intents: [
       <Button.Transaction target={`/tx/${nextMintableDay}/${userAddress}`}>
         Mint Day {`${Number(nextMintableDay) + 1}`}

@@ -29,3 +29,5 @@ export const DAYS_CONTRACT_ADDRESSES = [
   "0xD7ac9645beb87421263E8267b50DD96D66CDb037",
   "0x17083A10ABc7de9e91313a8EC445f92371C424A8",
 ] as Address[];
+
+export const MAIN_SITE_URL = "https://advent.unlock-protocol.com";
