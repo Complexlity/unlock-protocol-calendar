@@ -86,8 +86,8 @@ app.frame("/calendar", async (c) => {
       message: "Something went wrong getting your user data",
     });
   }
-  const userAddress = res.data[0].ethAddresses[0] as Address;
-  // const userAddress = "0x8ff47879d9eE072b593604b8b3009577Ff7d6809" as Address;
+  // const userAddress = res.data[0].ethAddresses[0] as Address;
+  const userAddress = "0x8ff47879d9eE072b593604b8b3009577Ff7d6809" as Address;
   // const userAddress = "0xe06Dacf8a98CBbd9692A17fcb8e917a6cb5e65ED" as Address;
   const today = getCurrentDateUTC();
   const validKeys = await getValidKeysForUser(userAddress, today);
@@ -101,10 +101,18 @@ app.frame("/calendar", async (c) => {
     }
   }
 
-  const imageUrl = getDayImage(nextMintableDay == -1 ? 1 : nextMintableDay + 1);
+  // const imageUrl = getDayImage(nextMintableDay == -1 ? 1 : nextMintableDay + 1);
+  // const action = nextMintableDay == -1 ? `/finish/${today}` : `/calendar`;
+
   return c.res({
     action: `/finish/${nextMintableDay}`,
-    image: imageUrl,
+    image: (
+      <AdventCalendarImage
+        currentDay={today}
+        nextMintableDay={nextMintableDay}
+      />
+    ),
+    // image: imageUrl,
     // image: (
     //   <div
     //     style={{
@@ -262,6 +270,109 @@ app.transaction("/tx/:day/:address", async (c) => {
     value: 0n,
   });
 });
+
+function AdventCalendarImage({
+  currentDay,
+  nextMintableDay,
+}: {
+  currentDay: number;
+  nextMintableDay: number;
+}) {
+  const boxSize = 100;
+  const gap = 24;
+
+  function getBoxColor(day: number) {
+    if (nextMintableDay === -1 && day <= currentDay) {
+      return "#48bb78"; // Success (green) for all days up to currentDay
+    } else if (day < nextMintableDay + 1) {
+      return "#48bb78"; // Success (green)
+    } else if (day >= nextMintableDay + 1 && day <= currentDay) {
+      return "#ed8936"; // Current day range (orange)
+    } else if (day > currentDay) {
+      return "#4299e1"; // Future day (blue)
+    } else {
+      return "#718096"; // Default (gray)
+    }
+  }
+
+  const rowStyle = {
+    display: "flex",
+    gap: `${gap}px`,
+    width: "100%",
+    justifyContent: "center",
+    marginBottom: `${gap}px`,
+  };
+
+  const boxStyle = (day: number) => ({
+    width: boxSize,
+    height: boxSize,
+    backgroundColor: getBoxColor(day),
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 24,
+    fontWeight: "bold",
+    borderRadius: 8,
+    color: "white",
+  });
+
+  const containerStyle = {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1a365d",
+    color: "white",
+    fontFamily: "sans-serif",
+  };
+
+  const row1 = Array.from({ length: 6 }, (_, i) => i + 1);
+  const row2 = Array.from({ length: 6 }, (_, i) => i + 7);
+  const row3 = Array.from({ length: 6 }, (_, i) => i + 13);
+  const row4 = Array.from({ length: 6 }, (_, i) => i + 19);
+
+  return (
+    <div style={containerStyle}>
+      <h1 style={{ fontSize: 48, marginBottom: 20 }}>
+        Your Advent Calendar 2024
+      </h1>
+
+      <div style={rowStyle}>
+        {row1.map((day) => (
+          <div key={day} style={boxStyle(day)}>
+            {day}
+          </div>
+        ))}
+      </div>
+
+      <div style={rowStyle}>
+        {row2.map((day) => (
+          <div key={day} style={boxStyle(day)}>
+            {day}
+          </div>
+        ))}
+      </div>
+
+      <div style={rowStyle}>
+        {row3.map((day) => (
+          <div key={day} style={boxStyle(day)}>
+            {day}
+          </div>
+        ))}
+      </div>
+
+      <div style={rowStyle}>
+        {row4.map((day) => (
+          <div key={day} style={boxStyle(day)}>
+            {day}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // @ts-ignore
 const isEdgeFunction = typeof EdgeFunction !== "undefined";
