@@ -80,14 +80,14 @@ app.frame("/calendar", async (c) => {
     });
   }
   const userFid = frameData.fid;
-  // const res = await sdkInstance.getUsersByFid([userFid]);
-  // if (res.error) {
-  //   return c.error({
-  //     message: "Something went wrong getting your user data",
-  //   });
-  // }
-  // const userAddress = res.data[0].ethAddresses[0];
-  const userAddress = "0x8ff47879d9eE072b593604b8b3009577Ff7d6809" as Address;
+  const res = await sdkInstance.getUsersByFid([userFid]);
+  if (res.error) {
+    return c.error({
+      message: "Something went wrong getting your user data",
+    });
+  }
+  const userAddress = res.data[0].ethAddresses[0] as Address;
+  // const userAddress = "0x8ff47879d9eE072b593604b8b3009577Ff7d6809" as Address;
   // const userAddress = "0xe06Dacf8a98CBbd9692A17fcb8e917a6cb5e65ED" as Address;
   const today = getCurrentDateUTC();
   const validKeys = await getValidKeysForUser(userAddress, today);
