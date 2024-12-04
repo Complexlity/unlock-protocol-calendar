@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "frog": "latest",
-    "hono": "^4"
+    "hono": "^4",
+    "uni-farcaster-sdk": "^0.0.25",
+    "viem": "^2.21.53"
   },
   "devDependencies": {
     "tsx": "^4.7.1",

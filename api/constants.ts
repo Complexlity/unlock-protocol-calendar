@@ -1,0 +1,7 @@
+import { Address } from "viem";
+
+export const DAYS_CONTRACT_ADDRESSES = [
+  "0x8c807122859DAE7cf07dE09dC1aEBD997624a88b",
+  "0x1755b71F67bCe674C4Dbc8FC2F843135907A3C3F",
+  "0x4e123Cf06c56dfED85F4AeD22fAd56F2c6B930aa",
+] as Address[];
