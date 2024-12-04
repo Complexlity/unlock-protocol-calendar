@@ -87,8 +87,8 @@ app.frame("/calendar", async (c) => {
     });
   }
   // const userAddress = res.data[0].ethAddresses[0] as Address;
-  const userAddress = "0x8ff47879d9eE072b593604b8b3009577Ff7d6809" as Address;
-  // const userAddress = "0xe06Dacf8a98CBbd9692A17fcb8e917a6cb5e65ED" as Address;
+  // const userAddress = "0x8ff47879d9eE072b593604b8b3009577Ff7d6809" as Address;
+  const userAddress = "0xe06Dacf8a98CBbd9692A17fcb8e917a6cb5e65ED" as Address;
   const today = getCurrentDateUTC();
   const validKeys = await getValidKeysForUser(userAddress, today);
   console.log({ validKeys });
@@ -101,11 +101,16 @@ app.frame("/calendar", async (c) => {
     }
   }
 
+  const remainingDays =
+    nextMintableDay == -1 || nextMintableDay == today - 1
+      ? 0
+      : validKeys.slice(nextMintableDay + 1).length;
+
   // const imageUrl = getDayImage(nextMintableDay == -1 ? 1 : nextMintableDay + 1);
   // const action = nextMintableDay == -1 ? `/finish/${today}` : `/calendar`;
 
   return c.res({
-    action: `/finish/${nextMintableDay}`,
+    action: `/finish/${nextMintableDay}/${remainingDays}`,
     image: (
       <AdventCalendarImage
         currentDay={today}
@@ -152,41 +157,49 @@ app.frame("/calendar", async (c) => {
   });
 });
 
-app.frame("/finish/:day", async (c) => {
-  const day = c.req.param("day");
+app.frame("/finish/:day/:remainingDays", async (c) => {
+  const { day, remainingDays } = c.req.param();
+  const mintedImageUrl = getDayImage(Number(day) + 1);
   return c.res({
     image: (
-      <div
-        style={{
-          alignItems: "center",
-          background: "linear-gradient(to right, #432889, #17101F)",
-          backgroundSize: "100% 100%",
-          display: "flex",
-          flexDirection: "column",
-          flexWrap: "nowrap",
-          height: "100%",
-          justifyContent: "center",
-          textAlign: "center",
-          width: "100%",
-        }}
-      >
-        <div
-          style={{
-            color: "white",
-            fontSize: 60,
-            fontStyle: "normal",
-            letterSpacing: "-0.025em",
-            lineHeight: 1.4,
-            marginTop: 30,
-            padding: "0 120px",
-            whiteSpace: "pre-wrap",
-            display: "flex",
-          }}
-        >
-          You successfully minted day {`${Number(day) + 1}`}
-        </div>
-      </div>
+      <FinalImage
+        mintedDay={Number(day) + 1}
+        remainingDays={Number(remainingDays)}
+        mintedImageUrl={mintedImageUrl}
+      />
     ),
+    // image: (
+    //   <div
+    //     style={{
+    //       alignItems: "center",
+    //       background: "linear-gradient(to right, #432889, #17101F)",
+    //       backgroundSize: "100% 100%",
+    //       display: "flex",
+    //       flexDirection: "column",
+    //       flexWrap: "nowrap",
+    //       height: "100%",
+    //       justifyContent: "center",
+    //       textAlign: "center",
+    //       width: "100%",
+    //     }}
+    //   >
+    //     <div
+    //       style={{
+    //         color: "white",
+    //         fontSize: 60,
+    //         fontStyle: "normal",
+    //         letterSpacing: "-0.025em",
+    //         lineHeight: 1.4,
+    //         marginTop: 30,
+    //         padding: "0 120px",
+    //         whiteSpace: "pre-wrap",
+    //         display: "flex",
+    //       }}
+    //     >
+    //       You successfully minted day {`${Number(day) + 1}`}
+    //     </div>
+    //   </div>
+    // ),
     intents: [<Button action="/calendar">View Calendar</Button>],
   });
 });
@@ -369,6 +382,110 @@ function AdventCalendarImage({
             {day}
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+interface FinalImageProps {
+  mintedDay: number;
+  remainingDays: number;
+  mintedImageUrl: string;
+}
+
+function FinalImage({
+  mintedDay,
+  remainingDays,
+  mintedImageUrl,
+}: FinalImageProps) {
+  const containerStyle = {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1a365d",
+    color: "white",
+    fontFamily: "sans-serif",
+    padding: "40px",
+    gap: "24px",
+  };
+
+  const cardStyle = {
+    backgroundColor: "#2d3748",
+    borderRadius: "16px",
+    padding: "32px",
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    gap: "24px",
+    maxWidth: "600px",
+    width: "100%",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  };
+
+  const imageStyle = {
+    width: "300px",
+    height: "300px",
+    borderRadius: "12px",
+    objectFit: "cover" as const,
+    backgroundColor: "#4a5568",
+  };
+
+  const titleStyle = {
+    fontSize: "32px",
+    fontWeight: "bold",
+    textAlign: "center" as const,
+    color: "#48bb78",
+  };
+
+  const messageStyle = {
+    fontSize: "24px",
+    textAlign: "center" as const,
+    color: "#e2e8f0",
+    lineHeight: 1.6,
+  };
+
+  const getMessage = () => {
+    if (remainingDays === 0) {
+      if (mintedDay === 24) {
+        return (
+          <span>
+            Congratulations! You've completed all days of the advent calendar!
+          </span>
+        );
+      }
+      return <span>Come back tomorrow to mint day {mintedDay + 1}.</span>;
+    }
+
+    const daysText = remainingDays === 1 ? "day" : "days";
+
+    return (
+      <span tw="flex items-center gap-2">
+        <span>You still have </span>
+        <span tw="text-orange-400 font-bold text-3xl mx-2">
+          {remainingDays} {daysText}
+        </span>{" "}
+        <span>to be minted.</span>
+      </span>
+    );
+  };
+
+  return (
+    <div style={containerStyle}>
+      <div style={cardStyle}>
+        <h1 style={titleStyle}>Day {mintedDay} Successfully Minted! 🎉</h1>
+
+        {mintedImageUrl && (
+          <img
+            src={mintedImageUrl}
+            alt={`Day ${mintedDay} NFT`}
+            style={imageStyle}
+          />
+        )}
+
+        <p style={messageStyle}>{getMessage()}</p>
       </div>
     </div>
   );
