@@ -42,20 +42,39 @@ export const app = new Frog({
 });
 
 app.hono.post("/send-notifications", async (c) => {
+  console.log("send notifications");
   const signature = c.req.header("Upstash-Signature");
-  console.log({ signature });
+  if (!signature) {
+    return c.json({ error: "No signature provided" }, 400);
+  }
+  const body = await c.req.text();
   const currentDay = getCurrentDateUTC();
   const notificationMessage = `
-    Day ${currentDay} is now mintable!.
+    Another Day ${currentDay} is now mintable!.
 
-    https://https://unlock-protocol-calendar.vercel.app/api
+    ${config.PROD_URL}/api
     `;
-  await sentDcToUser(846887, notificationMessage);
-  const userFids = await kvStore.smembers(UNLOCK_REDIS_KEY);
 
-  for (const fid of userFids) {
-    await sentDcToUser(Number(fid), notificationMessage);
+  const isValid = await receiver
+    .verify({
+      body,
+      signature,
+    })
+    .catch((e) => false);
+
+  if (isValid) {
+    console.log("Sedding dummy to block bot");
+    await sentDcToUser(846887, notificationMessage);
+
+    const userFids = await kvStore.smembers(UNLOCK_REDIS_KEY);
+    console.log({ userFids });
+    for (const fid of userFids) {
+      await sentDcToUser(Number(fid), notificationMessage);
+    }
+    return c.body("Sent dc to blockbot");
   }
+  console.log("Invalid request");
+  return c.body("Unverified");
 });
 
 app.frame("/", (c) => {

@@ -9,9 +9,9 @@ const configSchema = z.object({
   DC_API_KEY: z.string(),
   QSTASH_CURRENT_SIGNING_KEY: z.string(),
   QSTASH_NEXT_SIGNING_KEY: z.string(),
+  PROD_URL: z.string().default("https://unlock-protocol-calendar.vercel.app"),
 });
 
 const config = configSchema.parse(process.env);
-console.log({ config });
 
 export default config;
