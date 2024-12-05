@@ -1,15 +1,19 @@
 import { Address, createPublicClient, http } from "viem";
 import { base } from "viem/chains";
 import { hookAbi, PublicLockAbi, unlockAbi } from "./abi.js";
-import { DAYS_CONTRACT_ADDRESSES, MAIN_SITE_URL } from "./constants.js";
-import { config } from "dotenv";
+import {
+  DAYS_CONTRACT_ADDRESSES,
+  MAIN_SITE_URL,
+  UNLOCK_REDIS_KEY,
+} from "./constants.js";
+import config from "./config.js";
+import { Redis } from "@upstash/redis";
 
-config();
+export const kvStore = new Redis({
+  url: config.REDIS_URL,
+  token: config.REDIS_TOKEN,
+});
 
-const dcApiKey = process.env.DC_API_KEY;
-if (!dcApiKey) {
-  throw new Error("DC_API_KEY is not set");
-}
 export function getCurrentDateUTC() {
   return new Date().getUTCDate();
 }
@@ -111,7 +115,7 @@ export async function sentDcToUser(fid: number, message: string) {
       {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${dcApiKey}`,
+          Authorization: `Bearer ${config.DC_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -137,3 +141,6 @@ export async function sentDcToUser(fid: number, message: string) {
   }
 }
 
+export async function registerUserForNotifications(fid: number) {
+  await kvStore.sadd(UNLOCK_REDIS_KEY, fid);
+}

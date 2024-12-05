@@ -31,3 +31,5 @@ export const DAYS_CONTRACT_ADDRESSES = [
 ] as Address[];
 
 export const MAIN_SITE_URL = "https://advent.unlock-protocol.com";
+
+export const UNLOCK_REDIS_KEY = `unlock-advent-calendar-2024`;
