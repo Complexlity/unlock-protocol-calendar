@@ -14,8 +14,11 @@ import {
   getUserNftBalance,
   getValidKeysForUser,
   kvStore,
+  registerUserForNotifications,
   sentDcToUser,
 } from "./utils.js";
+import { Receiver } from "@upstash/qstash";
+import config from "./config.js";
 
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -26,6 +29,11 @@ const sdkInstance = new uniFarcasterSdk({
   neynarApiKey: "NEYNAR_FROG_FM",
 });
 
+const receiver = new Receiver({
+  currentSigningKey: config.QSTASH_CURRENT_SIGNING_KEY,
+  nextSigningKey: config.QSTASH_NEXT_SIGNING_KEY,
+});
+
 export const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
@@ -34,18 +42,20 @@ export const app = new Frog({
 });
 
 app.hono.post("/send-notifications", async (c) => {
+  const signature = c.req.header("Upstash-Signature");
+  console.log({ signature });
   const currentDay = getCurrentDateUTC();
   const notificationMessage = `
     Day ${currentDay} is now mintable!.
 
     https://https://unlock-protocol-calendar.vercel.app/api
     `;
+  await sentDcToUser(846887, notificationMessage);
   const userFids = await kvStore.smembers(UNLOCK_REDIS_KEY);
 
   for (const fid of userFids) {
     await sentDcToUser(Number(fid), notificationMessage);
   }
-  await sentDcToUser(846887, notificationMessage);
 });
 
 app.frame("/", (c) => {
@@ -149,23 +159,11 @@ app.frame("/finish/:day/:remainingDays", async (c) => {
   const verified = c.verified;
   const frameData = c.frameData;
   const mintedDay = Number(day) + 1;
-  // let dcMessage = `You just minted unlock protocol advent calendar day ${mintedDay}\n`;
-  // if (remainingDays === 0) {
-  //   if (mintedDay === 24) {
-  //     dcMessage +=
-  //       "\nCongratulations! You've completed all days of the advent calendar!";
-  //   }
-  //   dcMessage += `\nCome back tomorrow to mint day ${mintedDay + 1}. `;
-  // } else {
-  //   const daysText = remainingDays === 1 ? "day" : "days";
-  //   dcMessage += `\n You still have ${remainingDays} more ${daysText} to mint 🥳.`;
-  // }
 
-  // if (verified && frameData) {
-  // const userFid = frameData.fid;
-  // await registerUserForNotifications(userFid)
-  // await sentDcToUser(userFid, dcMessage).catch((e) => console.error(e));
-  // }
+  if (verified && frameData) {
+    const userFid = frameData.fid;
+    await registerUserForNotifications(userFid);
+  }
   const mintedImageUrl = getDayImage(mintedDay);
   return c.res({
     image: (
@@ -175,38 +173,7 @@ app.frame("/finish/:day/:remainingDays", async (c) => {
         mintedImageUrl={mintedImageUrl}
       />
     ),
-    // image: (
-    //   <div
-    //     style={{
-    //       alignItems: "center",
-    //       background: "linear-gradient(to right, #432889, #17101F)",
-    //       backgroundSize: "100% 100%",
-    //       display: "flex",
-    //       flexDirection: "column",
-    //       flexWrap: "nowrap",
-    //       height: "100%",
-    //       justifyContent: "center",
-    //       textAlign: "center",
-    //       width: "100%",
-    //     }}
-    //   >
-    //     <div
-    //       style={{
-    //         color: "white",
-    //         fontSize: 60,
-    //         fontStyle: "normal",
-    //         letterSpacing: "-0.025em",
-    //         lineHeight: 1.4,
-    //         marginTop: 30,
-    //         padding: "0 120px",
-    //         whiteSpace: "pre-wrap",
-    //         display: "flex",
-    //       }}
-    //     >
-    //       You successfully minted day {`${Number(day) + 1}`}
-    //     </div>
-    //   </div>
-    // ),
+
     intents: [<Button action="/calendar">View Calendar</Button>],
   });
 });
