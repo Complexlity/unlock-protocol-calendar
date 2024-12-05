@@ -14,6 +14,7 @@ import uniFarcasterSdk from "uni-farcaster-sdk";
 import { Address } from "viem";
 import { unlockAbi } from "./abi.js";
 import { base } from "viem/chains";
+import { neynar } from "frog/hubs";
 
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -28,8 +29,8 @@ export const app = new Frog({
   assetsPath: "/",
   basePath: "/api",
   // Supply a Hub to enable frame verification.
-  // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
-  title: "Frog Frame",
+  hub: neynar({ apiKey: "NEYNAR_FROG_FM" }),
+  title: "Unlock Protocol Advent Calendar",
 });
 
 app.frame("/", (c) => {
@@ -75,12 +76,15 @@ app.frame("/", (c) => {
 
 app.frame("/calendar", async (c) => {
   const frameData = c.frameData;
+  const verified = c.verified;
+  console.log(verified);
   if (!frameData) {
     return c.error({
       message: "Frame data missing",
     });
   }
-  const userFid = frameData.fid;
+  // const userFid = frameData.fid;
+  const userFid = 6801;
   const res = await sdkInstance.getUsersByFid([userFid]);
   if (res.error) {
     return c.error({
