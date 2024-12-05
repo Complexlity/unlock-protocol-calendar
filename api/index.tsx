@@ -29,6 +29,7 @@ export const app = new Frog({
   basePath: "/api",
   hub: neynar({ apiKey: "NEYNAR_FROG_FM" }),
   title: "Unlock Protocol Advent Calendar",
+  browserLocation: "https://advent.unlock-protocol.com/"
 });
 
 app.hono.post("/send-notifications", async (c) => {
@@ -38,7 +39,6 @@ app.hono.post("/send-notifications", async (c) => {
     console.log("Signature missing from request");
     return c.json({ error: "No signature provided" }, 400);
   }
-  console.log("Signature found..");
   const body = await c.req.text();
   const currentDay = getCurrentDateUTC();
   const notificationMessage = `
@@ -55,7 +55,6 @@ app.hono.post("/send-notifications", async (c) => {
     .catch((e) => false);
 
   if (!isValid) {
-    console.log("Invalid request");
     return c.json({ error: "Invalid signature" }, 400);
   }
 
