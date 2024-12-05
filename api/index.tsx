@@ -43,15 +43,17 @@ export const app = new Frog({
 });
 
 app.hono.post("/send-notifications", async (c) => {
-  console.log("send notifications");
   const signature = c.req.header("Upstash-Signature");
+  console.log({ signature });
   if (!signature) {
+    console.log("Signature missing from request");
     return c.json({ error: "No signature provided" }, 400);
   }
+  console.log("Signature found..");
   const body = await c.req.text();
   const currentDay = getCurrentDateUTC();
   const notificationMessage = `
-    A New Day ${currentDay} is now mintable!.
+    A Very New Day ${currentDay} is now mintable!.
 
     ${config.PROD_URL}/api
     `;
@@ -68,15 +70,18 @@ app.hono.post("/send-notifications", async (c) => {
     return c.json({ error: "Invalid signature" }, 400);
   }
 
+  console.log("Signature valid...");
   async function sendUserDCs() {
     // const userFids = await kvStore.smembers(UNLOCK_REDIS_KEY);
     const userFids = [846887];
     for (const fid of userFids) {
+      console.log("Sending DC to user", fid);
       await sentDcToUser(Number(fid), notificationMessage);
     }
   }
-
+  console.log("Waiting for DCs to send...");
   waitUntil(sendUserDCs());
+  console.log("Done here..");
 
   return c.json({ message: "Notifications sent successfully" });
 });

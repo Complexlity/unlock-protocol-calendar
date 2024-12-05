@@ -111,7 +111,7 @@ export async function sentDcToUser(fid: number, message: string) {
   const idempotencyKey = await generateIdempotencyKey(message);
   try {
     //Just send the request. Don't wait for it or get the result
-    fetch("https://api.warpcast.com/v2/ext-send-direct-cast", {
+    await fetch("https://api.warpcast.com/v2/ext-send-direct-cast", {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${config.DC_API_KEY}`,
