@@ -77,7 +77,8 @@ app.frame("/", (c) => {
 app.frame("/calendar", async (c) => {
   const frameData = c.frameData;
   const verified = c.verified;
-  console.log(verified);
+  console.log("Checking user verification...");
+  console.log({ verified });
   if (!frameData) {
     return c.error({
       message: "Frame data missing",
@@ -92,6 +93,7 @@ app.frame("/calendar", async (c) => {
     });
   }
   const userAddress = res.data[0].ethAddresses[0] as Address;
+  console.log({ userAddress });
   // const userAddress = "0x8ff47879d9eE072b593604b8b3009577Ff7d6809" as Address;
   // const userAddress = "0xe06Dacf8a98CBbd9692A17fcb8e917a6cb5e65ED" as Address;
   const today = getCurrentDateUTC();
