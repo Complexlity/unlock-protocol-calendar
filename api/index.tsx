@@ -8,8 +8,8 @@ import { Address } from "viem";
 import { base } from "viem/chains";
 import { unlockAbi } from "./abi.js";
 import config from "./config.js";
-import { DAYS_CONTRACT_ADDRESSES } from "./constants.js";
-import { sdkInstance, qstashReceiver } from "./services.js";
+import { DAYS_CONTRACT_ADDRESSES, UNLOCK_REDIS_KEY } from "./constants.js";
+import { sdkInstance, qstashReceiver, kvStore } from "./services.js";
 import {
   getCurrentDateUTC,
   getDayImage,
@@ -42,7 +42,7 @@ app.hono.post("/send-notifications", async (c) => {
   const body = await c.req.text();
   const currentDay = getCurrentDateUTC();
   const notificationMessage = `
-    A Very New Day ${currentDay} is now mintable!.
+    Day ${currentDay} NFT is now mintable!.
 
     ${config.PROD_URL}/api
     `;
@@ -60,7 +60,8 @@ app.hono.post("/send-notifications", async (c) => {
   }
 
   async function sendUserDCs() {
-    const userFids = [846887];
+    // const userFids = [846887];
+    const userFids = await kvStore.smembers(UNLOCK_REDIS_KEY);
     for (const fid of userFids) {
       console.log("Sending DC to user", fid);
       await sentDcToUser(Number(fid), notificationMessage);
