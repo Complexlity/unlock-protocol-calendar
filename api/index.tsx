@@ -8,6 +8,7 @@ import {
   getDayImage,
   getUserNftBalance,
   getValidKeysForUser,
+  sentDcToUser,
 } from "./utils.js";
 import { DAYS_CONTRACT_ADDRESSES } from "./constants.js";
 import uniFarcasterSdk from "uni-farcaster-sdk";
@@ -168,12 +169,32 @@ app.frame("/calendar", async (c) => {
 });
 
 app.frame("/finish/:day/:remainingDays", async (c) => {
-  const { day, remainingDays } = c.req.param();
-  const mintedImageUrl = getDayImage(Number(day) + 1);
+  const { day, remainingDays: remDays } = c.req.param();
+  const remainingDays = Number(remDays);
+  const verified = c.verified;
+  const frameData = c.frameData;
+  const mintedDay = Number(day) + 1;
+  let dcMessage = `You just minted unlock protocol advent calendar day ${mintedDay}\n`;
+  if (remainingDays === 0) {
+    if (mintedDay === 24) {
+      dcMessage +=
+        "\nCongratulations! You've completed all days of the advent calendar!";
+    }
+    dcMessage += `\nCome back tomorrow to mint day ${mintedDay + 1}. `;
+  } else {
+    const daysText = remainingDays === 1 ? "day" : "days";
+    dcMessage += `\n You still have ${remainingDays} more ${daysText} to mint 🥳.`;
+  }
+
+  if (verified && frameData) {
+    const userFid = frameData.fid;
+    await sentDcToUser(userFid, dcMessage).catch((e) => console.error(e));
+  }
+  const mintedImageUrl = getDayImage(mintedDay);
   return c.res({
     image: (
       <FinalImage
-        mintedDay={Number(day) + 1}
+        mintedDay={mintedDay}
         remainingDays={Number(remainingDays)}
         mintedImageUrl={mintedImageUrl}
       />
