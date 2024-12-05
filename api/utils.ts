@@ -1,18 +1,13 @@
 import { Address, createPublicClient, http } from "viem";
 import { base } from "viem/chains";
 import { hookAbi, PublicLockAbi, unlockAbi } from "./abi.js";
+import config from "./config.js";
 import {
   DAYS_CONTRACT_ADDRESSES,
   MAIN_SITE_URL,
   UNLOCK_REDIS_KEY,
 } from "./constants.js";
-import config from "./config.js";
-import { Redis } from "@upstash/redis";
-
-export const kvStore = new Redis({
-  url: config.REDIS_URL,
-  token: config.REDIS_TOKEN,
-});
+import { kvStore } from "./services.js";
 
 export function getCurrentDateUTC() {
   return new Date().getUTCDate();
@@ -91,18 +86,14 @@ export function getDayImage(day: number) {
 }
 
 export async function generateIdempotencyKey(input: string) {
-  // Use the SubtleCrypto API to generate a hash
   const encoder = new TextEncoder();
   const data = encoder.encode(input);
 
   return crypto.subtle.digest("SHA-256", data).then((buffer) => {
-    // Convert buffer to hex string
     const hashArray = Array.from(new Uint8Array(buffer));
     const hashHex = hashArray
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
-
-    // Return the first 16 characters of the hex string as the idempotency key
     return hashHex.substring(0, 16);
   });
 }
@@ -110,7 +101,6 @@ export async function generateIdempotencyKey(input: string) {
 export async function sentDcToUser(fid: number, message: string) {
   const idempotencyKey = await generateIdempotencyKey(message);
   try {
-    //Just send the request. Don't wait for it or get the result
     await fetch("https://api.warpcast.com/v2/ext-send-direct-cast", {
       method: "PUT",
       headers: {

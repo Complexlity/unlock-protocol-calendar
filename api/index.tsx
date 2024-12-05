@@ -1,39 +1,28 @@
+import { waitUntil } from "@vercel/functions";
 import { Button, Frog } from "frog";
 import { devtools } from "frog/dev";
 import { neynar } from "frog/hubs";
 import { handle } from "frog/next";
 import { serveStatic } from "frog/serve-static";
-import uniFarcasterSdk from "uni-farcaster-sdk";
 import { Address } from "viem";
 import { base } from "viem/chains";
 import { unlockAbi } from "./abi.js";
-import { DAYS_CONTRACT_ADDRESSES, UNLOCK_REDIS_KEY } from "./constants.js";
+import config from "./config.js";
+import { DAYS_CONTRACT_ADDRESSES } from "./constants.js";
+import { sdkInstance, qstashReceiver } from "./services.js";
 import {
   getCurrentDateUTC,
   getDayImage,
   getUserNftBalance,
   getValidKeysForUser,
-  kvStore,
   registerUserForNotifications,
   sentDcToUser,
 } from "./utils.js";
-import { Receiver } from "@upstash/qstash";
-import config from "./config.js";
-import { waitUntil } from "@vercel/functions";
 
 // Uncomment to use Edge Runtime.
 // export const config = {
 //   runtime: 'edge',
 // }
-
-const sdkInstance = new uniFarcasterSdk({
-  neynarApiKey: "NEYNAR_FROG_FM",
-});
-
-const receiver = new Receiver({
-  currentSigningKey: config.QSTASH_CURRENT_SIGNING_KEY,
-  nextSigningKey: config.QSTASH_NEXT_SIGNING_KEY,
-});
 
 export const app = new Frog({
   assetsPath: "/",
@@ -58,7 +47,7 @@ app.hono.post("/send-notifications", async (c) => {
     ${config.PROD_URL}/api
     `;
 
-  const isValid = await receiver
+  const isValid = await qstashReceiver
     .verify({
       body,
       signature,
@@ -70,18 +59,14 @@ app.hono.post("/send-notifications", async (c) => {
     return c.json({ error: "Invalid signature" }, 400);
   }
 
-  console.log("Signature valid...");
   async function sendUserDCs() {
-    // const userFids = await kvStore.smembers(UNLOCK_REDIS_KEY);
     const userFids = [846887];
     for (const fid of userFids) {
       console.log("Sending DC to user", fid);
       await sentDcToUser(Number(fid), notificationMessage);
     }
   }
-  console.log("Waiting for DCs to send...");
   waitUntil(sendUserDCs());
-  console.log("Done here..");
 
   return c.json({ message: "Notifications sent successfully" });
 });
