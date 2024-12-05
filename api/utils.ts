@@ -110,31 +110,19 @@ export async function generateIdempotencyKey(input: string) {
 export async function sentDcToUser(fid: number, message: string) {
   const idempotencyKey = await generateIdempotencyKey(message);
   try {
-    const response = await fetch(
-      "https://api.warpcast.com/v2/ext-send-direct-cast",
-      {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${config.DC_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          recipientFid: fid,
-          message: message,
-          idempotencyKey,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(
-        `HTTP error! status: ${response.status}, body: ${errorBody}`
-      );
-    }
-
-    const result = await response.json();
-    return result;
+    //Just send the request. Don't wait for it or get the result
+    fetch("https://api.warpcast.com/v2/ext-send-direct-cast", {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${config.DC_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        recipientFid: fid,
+        message: message,
+        idempotencyKey,
+      }),
+    });
   } catch (error) {
     console.error("Error sending direct cast:", error);
     throw error;

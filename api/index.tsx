@@ -19,6 +19,7 @@ import {
 } from "./utils.js";
 import { Receiver } from "@upstash/qstash";
 import config from "./config.js";
+import { waitUntil } from "@vercel/functions";
 
 // Uncomment to use Edge Runtime.
 // export const config = {
@@ -50,7 +51,7 @@ app.hono.post("/send-notifications", async (c) => {
   const body = await c.req.text();
   const currentDay = getCurrentDateUTC();
   const notificationMessage = `
-    Another Day ${currentDay} is now mintable!.
+    A New Day ${currentDay} is now mintable!.
 
     ${config.PROD_URL}/api
     `;
@@ -62,19 +63,22 @@ app.hono.post("/send-notifications", async (c) => {
     })
     .catch((e) => false);
 
-  if (isValid) {
-    console.log("Sedding dummy to block bot");
-    await sentDcToUser(846887, notificationMessage);
+  if (!isValid) {
+    console.log("Invalid request");
+    return c.json({ error: "Invalid signature" }, 400);
+  }
 
-    const userFids = await kvStore.smembers(UNLOCK_REDIS_KEY);
-    console.log({ userFids });
+  async function sendUserDCs() {
+    // const userFids = await kvStore.smembers(UNLOCK_REDIS_KEY);
+    const userFids = [846887];
     for (const fid of userFids) {
       await sentDcToUser(Number(fid), notificationMessage);
     }
-    return c.body("Sent dc to blockbot");
   }
-  console.log("Invalid request");
-  return c.body("Unverified");
+
+  waitUntil(sendUserDCs());
+
+  return c.json({ message: "Notifications sent successfully" });
 });
 
 app.frame("/", (c) => {
