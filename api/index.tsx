@@ -336,15 +336,15 @@ function AdventCalendarImage({
   const gap = 24;
   function getBoxColor(day: number) {
     if (nextMintableDay == -1 && day <= currentDay) {
-      return "#48bb78"; // Success (green) for all days up to currentDay
+      return "#48bb78"; // green
     } else if (day < nextMintableDay + 1) {
-      return "#48bb78"; // Success (green)
+      return "#48bb78"; // green
     } else if (day >= nextMintableDay + 1 && day <= currentDay) {
-      return "#ed8936"; // Current day range (orange)
+      return "#ed8936"; // orange
     } else if (day > currentDay) {
-      return "#718096"; // Default (gray)
+      return "#718096"; // gray
     } else {
-      return "#4299e1"; // Future day (blue)
+      return "#4299e1"; // blue
     }
   }
 
