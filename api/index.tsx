@@ -29,7 +29,7 @@ export const app = new Frog({
   basePath: "/api",
   hub: neynar({ apiKey: "NEYNAR_FROG_FM" }),
   title: "Unlock Protocol Advent Calendar",
-  browserLocation: "https://advent.unlock-protocol.com/"
+  browserLocation: "https://advent.unlock-protocol.com/",
 });
 
 app.hono.post("/send-notifications", async (c) => {
@@ -42,10 +42,12 @@ app.hono.post("/send-notifications", async (c) => {
   const body = await c.req.text();
   const currentDay = getCurrentDateUTC();
   const notificationMessage = `
-    Day ${currentDay} NFT is now mintable!.
+  Day ${currentDay} NFT is now mintable!.
 
-    ${config.PROD_URL}/api
-    `;
+  ${config.PROD_URL}/api/dc
+  
+  N/B: Unsubscribe from getting these notifications through the frame.
+  `;
 
   const isValid = await qstashReceiver
     .verify({
@@ -75,6 +77,42 @@ app.frame("/", (c) => {
   return c.res({
     image: <StartImage />,
     intents: [<Button action="/calendar">Start</Button>],
+  });
+});
+
+app.frame("/dc", (c) => {
+  return c.res({
+    image: <StartImage />,
+    intents: [
+      <Button action="/calendar">Start</Button>,
+      <Button action="/sub">Subscribe/Unsubscribe</Button>,
+    ],
+  });
+});
+app.frame("/sub", async (c) => {
+  const verified = c.verified;
+  const frameData = c.frameData;
+  if (!verified || !frameData) {
+    return c.error({
+      message: "User not verified",
+    });
+  }
+  const userFid = frameData.fid;
+  //check kv store set if fid is contained
+  const isSubscribed = await kvStore.sismember(UNLOCK_REDIS_KEY, userFid);
+  console.log({ userFid, isSubscribed });
+  if (isSubscribed) {
+    await kvStore.srem(UNLOCK_REDIS_KEY, userFid);
+  } else {
+    await kvStore.sadd(UNLOCK_REDIS_KEY, userFid);
+  }
+
+  return c.res({
+    image: <SubscribeImage type={isSubscribed ? "unsub" : "sub"} />,
+    intents: [
+      <Button>{isSubscribed ? "Subscribe" : "Unsubscribe"}</Button>,
+      <Button action="/calendar">View Calendar</Button>,
+    ],
   });
 });
 
@@ -527,6 +565,81 @@ function FinalImage({
 
         <p style={messageStyle}>{getMessage()}</p>
       </div>
+    </div>
+  );
+}
+
+function SubscribeImage({ type }: { type: "sub" | "unsub" }) {
+  const text =
+    type === "sub"
+      ? "You have successfully Subscribed to get DC notifications"
+      : "You have successfully Unsubscribed from DC notifications";
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#1a365d",
+        color: "white",
+        fontFamily: "sans-serif",
+        padding: "40px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "24px",
+          maxWidth: "800px",
+          textAlign: "center",
+        }}
+      >
+        <h2
+          style={{
+            fontSize: "34px",
+            fontWeight: "bold",
+            color: "white",
+            marginTop: "0",
+          }}
+        >
+          {text}
+        </h2>
+      </div>
+
+      {/* Decorative Elements */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          position: "absolute",
+          top: "40px",
+          left: "40px",
+          width: "24px",
+          height: "24px",
+          borderRadius: "50%",
+          background: "#60a5fa",
+          opacity: "0.5",
+        }}
+      ></div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          position: "absolute",
+          bottom: "40px",
+          right: "40px",
+          width: "24px",
+          height: "24px",
+          borderRadius: "50%",
+          background: "#a78bfa",
+          opacity: "0.5",
+        }}
+      ></div>
     </div>
   );
 }
