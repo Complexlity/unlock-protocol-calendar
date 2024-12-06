@@ -8,7 +8,11 @@ import { Address } from "viem";
 import { base } from "viem/chains";
 import { unlockAbi } from "./abi.js";
 import config from "./config.js";
-import { DAYS_CONTRACT_ADDRESSES, UNLOCK_REDIS_KEY } from "./constants.js";
+import {
+  DAYS_CONTRACT_ADDRESSES,
+  MAIN_SITE_URL,
+  UNLOCK_REDIS_KEY,
+} from "./constants.js";
 import { sdkInstance, qstashReceiver, kvStore } from "./services.js";
 import {
   getCurrentDateUTC,
@@ -29,7 +33,7 @@ export const app = new Frog({
   basePath: "/api",
   hub: neynar({ apiKey: "NEYNAR_FROG_FM" }),
   title: "Unlock Protocol Advent Calendar",
-  browserLocation: "https://advent.unlock-protocol.com/",
+  browserLocation: MAIN_SITE_URL,
 });
 
 app.hono.post("/send-notifications", async (c) => {
