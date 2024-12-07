@@ -82,9 +82,6 @@ export const getLockAddresses = async (hookContractAddress: Address) => {
 };
 
 export function getDayImage(day: number) {
-  if (day > 15) {
-    day = Math.floor(Math.random() * 15) + 1;
-  }
   return `${MAIN_SITE_URL}/images/nft/${day}.png`;
 }
 
