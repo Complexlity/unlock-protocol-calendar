@@ -34,7 +34,8 @@ export const app = new Frog({
   hub: neynar({ apiKey: "NEYNAR_FROG_FM" }),
   title: "Unlock Protocol Advent Calendar",
   browserLocation: MAIN_SITE_URL,
-});
+  verifyOrigin: false,
+ });
 
 app.hono.post("/send-notifications", async (c) => {
   const signature = c.req.header("Upstash-Signature");
@@ -123,8 +124,7 @@ app.frame("/sub", async (c) => {
 app.frame("/calendar", async (c) => {
   const frameData = c.frameData;
   const verified = c.verified;
-  console.log("Checking user verification...");
-  console.log({ verified });
+  
   if (!frameData) {
     return c.error({
       message: "Frame data missing",
