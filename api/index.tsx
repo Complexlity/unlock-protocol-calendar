@@ -80,20 +80,28 @@ app.hono.post("/send-notifications", async (c) => {
 
 app.frame("/", (c) => {
   return c.res({
-    image: <StartImage />,
+    image: "/start-image",
     intents: [<Button action="/calendar">Start</Button>],
   });
 });
 
+
 app.frame("/dc", (c) => {
   return c.res({
-    image: <StartImage />,
+    image: "/start-image",
     intents: [
       <Button action="/calendar">Start</Button>,
       <Button action="/sub">Subscribe/Unsubscribe</Button>,
     ],
   });
 });
+
+app.image('/start-image', (c) => {
+  return c.res({
+    image: <StartImage />,
+  })
+})
+
 app.frame("/sub", async (c) => {
   const verified = c.verified;
   const frameData = c.frameData;
